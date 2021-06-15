@@ -8,10 +8,19 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
   //identify and group exact matches
   data.forEach((d, di) => {
     if (d.length <= ngramSize) {
-      addNgram(d, di, ngrams);
+      // TODO: put all shorts words in one group?
+      // ignore words shorter than ngramSize
+      // addNgram(d, di, ngrams);
     } else {
       for (let i = 0; i < d.length - ngramSize; i += 1) {
-        addNgram(d.substr(i, ngramSize), di, ngrams);
+        const str = d.substr(i, ngramSize);
+        if (!(str in ngrams)) {
+          ngrams[str] = [];
+        }
+      
+        if (ngrams[str].indexOf(di) === -1) {
+          ngrams[str].push(di);
+        }
       }
     }
   });
@@ -33,7 +42,7 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
         }
         if (id in clusterMap && clusterMap[id] !== clusterName) {
           const tId = String(clusterMap[id]);
-          clusters[clusterMap[id]].forEach(cid => {
+          clusters[tId].forEach(cid => {
             if (!clusters[clusterName].includes(cid)) {
               clusters[clusterName].push(cid);
             }
@@ -51,14 +60,4 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
   console.log(Object.keys(clusters).length);
 
   return clusters;
-};
-
-const addNgram = (str: string, id: number, ngrams: ngramList): void => {
-  if (!(str in ngrams)) {
-    ngrams[str] = [];
-  }
-
-  if (ngrams[str].indexOf(id) === -1) {
-    ngrams[str].push(id);
-  }
 };
