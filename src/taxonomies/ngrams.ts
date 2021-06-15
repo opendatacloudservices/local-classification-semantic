@@ -17,7 +17,7 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
         if (!(str in ngrams)) {
           ngrams[str] = [];
         }
-      
+
         if (ngrams[str].indexOf(di) === -1) {
           ngrams[str].push(di);
         }
@@ -30,31 +30,43 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
   let clusterCount = 1;
   const clusterMap: {[key: number]: string} = {};
 
-  for (const n in ngrams) {
-    if (ngrams[n].length > 1) {
+  Object.keys(ngrams).forEach(gram => {
+    const ngram = ngrams[gram];
+    if (ngram.length > 1) {
       const clusterName = 'cluster-' + clusterCount;
       clusterCount += 1;
       clusters[clusterName] = [];
-      ngrams[n].forEach(id => {
-        if (!clusters[clusterName].includes(id)) {
+      ngram.forEach(id => {
+        if (clusters[clusterName].indexOf(id) === -1) {
           clusters[clusterName].push(id);
         }
         if (id in clusterMap && clusterMap[id] !== clusterName) {
           const tId = String(clusterMap[id]);
-          clusters[tId].forEach(cid => {
-            if (!clusters[clusterName].includes(cid)) {
-              clusters[clusterName].push(cid);
-            }
-            clusterMap[cid] = clusterName;
-          });
+          // clusters[tId].forEach(cid => {
+          //   if (clusters[clusterName].indexOf(cid) === -1) {
+          //     clusters[clusterName].push(cid);
+          //   }
+          //   clusterMap[cid] = clusterName;
+          // });
+          // Array.prototype.unique = function() {
+          //   var a = this.concat();
+          //   for(var i=0; i<a.length; ++i) {
+          //       for(var j=i+1; j<a.length; ++j) {
+          //           if(a[i] === a[j])
+          //               a.splice(j--, 1);
+          //       }
+          //   }
+          
+          //   return a;
+          // };
+          
           delete clusters[tId];
         }
         clusterMap[id] = clusterName;
       });
-      console.log(Object.keys(clusters).length);
     }
-    delete ngrams[n];
-  }
+    delete ngrams[gram];
+  });
 
   console.log(Object.keys(clusters).length);
 
