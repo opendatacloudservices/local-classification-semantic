@@ -32,7 +32,6 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
 
   for (const n in ngrams) {
     if (ngrams[n].length > 1) {
-      console.log(n);
       const clusterName = 'cluster-' + clusterCount;
       clusterCount += 1;
       clusters[clusterName] = [];
