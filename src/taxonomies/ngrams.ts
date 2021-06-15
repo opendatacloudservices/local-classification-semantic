@@ -42,28 +42,20 @@ export const prepare = (data: string[], ngramSize = 6): clusterList => {
         }
         if (id in clusterMap && clusterMap[id] !== clusterName) {
           const tId = String(clusterMap[id]);
-          // clusters[tId].forEach(cid => {
-          //   if (clusters[clusterName].indexOf(cid) === -1) {
-          //     clusters[clusterName].push(cid);
-          //   }
-          //   clusterMap[cid] = clusterName;
-          // });
-          // Array.prototype.unique = function() {
-          //   var a = this.concat();
-          //   for(var i=0; i<a.length; ++i) {
-          //       for(var j=i+1; j<a.length; ++j) {
-          //           if(a[i] === a[j])
-          //               a.splice(j--, 1);
-          //       }
-          //   }
-          
-          //   return a;
-          // };
-          
+          clusters[tId].forEach(cid => {
+            // if (clusters[clusterName].indexOf(cid) === -1) {
+            clusters[clusterName].push(cid);
+            // }
+            clusterMap[cid] = clusterName;
+          });
           delete clusters[tId];
         }
         clusterMap[id] = clusterName;
       });
+      clusters[clusterName].sort();
+      for (let d = clusters[clusterName].length - 1; d >= 0; d -= 1) {
+        
+      }
     }
     delete ngrams[gram];
   });

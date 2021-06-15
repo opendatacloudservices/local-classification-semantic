@@ -39,12 +39,12 @@ const prepare = (data, ngramSize = 6) => {
                 }
                 if (id in clusterMap && clusterMap[id] !== clusterName) {
                     const tId = String(clusterMap[id]);
-                    // clusters[tId].forEach(cid => {
-                    //   if (clusters[clusterName].indexOf(cid) === -1) {
-                    //     clusters[clusterName].push(cid);
-                    //   }
-                    //   clusterMap[cid] = clusterName;
-                    // });
+                    clusters[tId].forEach(cid => {
+                        // if (clusters[clusterName].indexOf(cid) === -1) {
+                        clusters[clusterName].push(cid);
+                        // }
+                        clusterMap[cid] = clusterName;
+                    });
                     delete clusters[tId];
                 }
                 clusterMap[id] = clusterName;
