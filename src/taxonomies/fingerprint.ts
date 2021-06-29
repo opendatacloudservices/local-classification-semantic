@@ -7,7 +7,7 @@
 // import * as meta from 'metaphone';
 import * as cologne from 'cologne-phonetic';
 import * as snowball from 'node-snowball';
-import {ngramClusters, clusterResult, clusterResultEl} from '../types';
+import {ngramClusters} from '../types';
 
 const punct = /[~`!@#$%^&*(){}[\];:"'<,.>?/\\|_+=-]/g;
 const printable = /[^A-Za-z0-9\s]+/g;
@@ -26,7 +26,7 @@ export const key = (
   }
 ): string => {
   if (str === null || !str) {
-    throw new Error('key function requires a string to work');
+    throw new Error(`key function requires a string to work: ${str}`);
   } else {
     str = str.trim();
     if (type === 'normal') {

@@ -7,17 +7,20 @@ export interface Taxonomy {
 
 export interface TaxonomyGroup {
   label: string;
+  labelEn?: string;
   types: string[];
   children: {
+    oid?: number;
     id: number;
     value: string;
     type: string;
     count: number;
+    merge?: string;
   }[];
 }
 
 export interface ngramList {
-  [key: string]: number[];
+  [key: string]: string;
 }
 
 export interface ngramClusters {
@@ -41,4 +44,10 @@ export interface clusterResultEl {
 export interface clusterResult {
   cluster: clusterResultEl;
   key: string;
+}
+
+export interface GeoName {
+  lat: number;
+  lon: number;
+  values: string[];
 }

@@ -18,7 +18,7 @@ const key = (str, type = 'normal', params = {
     stemming: false,
 }) => {
     if (str === null || !str) {
-        throw new Error('key function requires a string to work');
+        throw new Error(`key function requires a string to work: ${str}`);
     }
     else {
         str = str.trim();
