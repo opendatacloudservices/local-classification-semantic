@@ -1,5 +1,5 @@
 import {GeoName, Taxonomy} from '../types';
-import {readFile, writeFileSync} from 'fs';
+import {readFileSync, writeFileSync} from 'fs';
 
 // min length of a location name
 const minLength = 4;
@@ -69,52 +69,60 @@ const exclude = [
 
 export const loadGeonames = (): Promise<GeoName[]> => {
   return new Promise((resolve, reject) => {
-    readFile('./assets/geonames_DE.txt', 'utf8', (err, data: string) => {
-      if (err) {
-        reject(err);
-      }
-      const geoNames: GeoName[] = [];
-      data.split('\n').forEach(line => {
-        const columns = line.split('\t');
-        if (['A', 'H', 'L', 'T', 'V'].includes(columns[6])) {
-          const values: string[] = [];
-          if (
-            columns[1] &&
-            columns[1].length >= minLength &&
-            !exclude.includes(columns[1])
-          ) {
-            values.push(columns[1].toLowerCase().trim());
-          }
-          if (
-            columns[2] &&
-            columns[2].length >= minLength &&
-            values.indexOf(columns[2]) === -1 &&
-            !exclude.includes(columns[2])
-          ) {
-            values.push(columns[2].toLowerCase().trim());
-          }
-          // Alternate writings contain a lot of weird stuff
-          if (columns[3]) {
-            columns[3].split(',').forEach(v => {
-              if (
-                v &&
-                v.length >= minLength &&
-                values.indexOf(v) === -1 &&
-                !exclude.includes(v)
-              ) {
-                values.push(v.toLowerCase().trim());
-              }
-            });
-          }
-          geoNames.push({
-            lat: parseFloat(columns[4]),
-            lon: parseFloat(columns[5]),
-            values,
+    const data = readFileSync('./assets/geonames_DE.txt', 'utf8');
+    const officialData = readFileSync('./assets/locations-clean.tsv', 'utf8');
+      
+    const geoNames: GeoName[] = [];
+    data.split('\n').forEach(line => {
+      const columns = line.split('\t');
+      if (['A', 'H', 'L', 'T', 'V'].includes(columns[6])) {
+        const values: string[] = [];
+        if (
+          columns[1] &&
+          columns[1].length >= minLength &&
+          !exclude.includes(columns[1])
+        ) {
+          values.push(columns[1].toLowerCase().trim());
+        }
+        if (
+          columns[2] &&
+          columns[2].length >= minLength &&
+          values.indexOf(columns[2]) === -1 &&
+          !exclude.includes(columns[2])
+        ) {
+          values.push(columns[2].toLowerCase().trim());
+        }
+        // Alternate writings contain a lot of weird stuff
+        if (columns[3]) {
+          columns[3].split(',').forEach(v => {
+            if (
+              v &&
+              v.length >= minLength &&
+              values.indexOf(v) === -1 &&
+              !exclude.includes(v)
+            ) {
+              values.push(v.toLowerCase().trim());
+            }
           });
         }
-      });
-      resolve(geoNames);
+        geoNames.push({
+          lat: parseFloat(columns[4]),
+          lon: parseFloat(columns[5]),
+          bbox: null,
+          values,
+        });
+      }
     });
+    officialData.split('\n').forEach(line => {
+      const columns = line.split('\t');
+      geoNames.push({
+        values: [columns[0].toLowerCase().trim()],
+        bbox: columns.slice(1).map(c => parseFloat(c)),
+        lat: null,
+        lon: null,
+      })
+    });
+    resolve(geoNames);
   });
 };
 
@@ -125,26 +133,37 @@ export const extractGeonames = (
 ): {
   taxonomies: Taxonomy[];
   locations: {
-    [key: number]: {
-      lat: number;
-      lon: number;
-      value: string;
-    };
+    [key: number]: GeoName;
   };
 } => {
   const r: {
     taxonomies: Taxonomy[];
     locations: {
-      [key: number]: {
-        lat: number;
-        lon: number;
-        value: string;
-      };
+      [key: number]: GeoName;
     };
   } = {
     taxonomies: [],
     locations: {},
   };
+
+  // remove all tags (completely) with an areal descriptors
+  const taxonomyDeletion: number[] = [];
+  for (let t = 0; t < taxonomies.length; t += 1) {
+    let els = taxonomies[t].value.split(/[\s,-.–;]/g);
+    const deletion: number[] = [];
+    els.forEach((el, ei) => {
+      el = el.replace(/[)[\]]/g, '');
+      if (geoFilterWords.includes(el)) {
+        taxonomyDeletion.push(t);
+      }
+    });
+  }
+
+  taxonomyDeletion.sort();
+  for (let d = taxonomyDeletion.length - 1; d >= 0; d -= 1) {
+    delete taxonomies[taxonomyDeletion[d]];
+  }
+  taxonomies = taxonomies.filter(t => (t ? true : false));
 
   const deletion: number[] = [];
 
@@ -181,7 +200,8 @@ export const extractGeonames = (
           matchSize = v.length;
           match = v;
           r.locations[t.id] = {
-            value: v,
+            values: [v],
+            bbox: geo.bbox,
             lat: geo.lat,
             lon: geo.lon,
           };
@@ -233,3 +253,34 @@ export const extractGeonames = (
 
   return r;
 };
+
+export const geoFilterWords = [
+  'Bundesland',
+  'Gemeinde',
+  'Gemeinden',
+  'Kreis',
+  'Kreise',
+  'Landkreis',
+  'Landkreise',
+  'Stadt',
+  'Städte',
+  'Bezirk',
+  'Bezirke',
+  'Stadtkreis',
+  'Kreisfreie Stadt',
+  'Freie Hansestadt',
+  'Freie und Hansestadt',
+  'Freistaat',
+  'Land',
+  'Bundesland',
+  'gemeinschaftsangehörig Stadt',
+  'Stadt (gemeinschaftsangehörig)',
+  'gemeinschaftsangehörig Gemeinde',
+  'Gemeinde (gemeinschaftsangehörig)',
+  'Stadt (kreisfrei)',
+  'Gemeindefreies Gebiet',
+  'Region',
+  'Regionalverband',
+  'Städteregion',
+  'Gemeindefreies Gebiet (gemeinschaftsangehörig)'
+].map(w => w.toLowerCase());

@@ -29,6 +29,14 @@ export const getTaxonomies = (client: Client): Promise<Taxonomy[]> => {
 };
 
 export const cleanTaxonomies = (taxonomies: Taxonomy[]): Taxonomy[] => {
+  // make sure its all lower case
+  taxonomies = taxonomies.map(t => {
+    return {
+      ...t,
+      value: t.value.toLowerCase(),
+    }
+  });
+
   // remove all taxonomies without value
   taxonomies = taxonomies.filter(t =>
     t.value &&
@@ -51,17 +59,42 @@ export const cleanTaxonomies = (taxonomies: Taxonomy[]): Taxonomy[] => {
     taxonomies[t].value = taxonomies[t].value.replace(/["'„“»«‚‘›‹]/g, '');
   }
 
+  const deleteWords = [
+    'http',
+    'inspire'
+  ];
+
+  taxonomies = taxonomies.filter(t => {
+    let notFound = true;
+    deleteWords.forEach(w => {
+      if (t.value.indexOf(w) >= 0) {
+        notFound = false;
+      }
+    });
+    return notFound;
+  });
+
   return taxonomies;
 };
 
 export const removeStopwords = (taxonomies: Taxonomy[]): Taxonomy[] => {
+  const customStopwords = [
+    'eu',
+    'sonstige',
+    'op',
+    'eg',
+    'insgesamt',
+    'gesamt',
+    'bn',
+  ];
+  const allStopwords = stopwords.concat(customStopwords);
   const taxonomyDeletion: number[] = [];
   for (let t = 0; t < taxonomies.length; t += 1) {
     let els = taxonomies[t].value.split(/[\s,-.–;]/g);
     const deletion: number[] = [];
     els.forEach((el, ei) => {
       el = el.replace(/[)[\]]/g, '');
-      if (stopwords.includes(el)) {
+      if (allStopwords.includes(el)) {
         deletion.push(ei);
       }
     });
@@ -139,9 +172,7 @@ export const transformTaxonomies = (
 
 /*
  * TODO:
- * - after all mergings, add minor tag to taxonomies with only N elements (probably 5)
  * - sample on 1800-2020, otherwise also remove
- * -," " and check overlaps remove stopwords
  */
 
 export const processFingerprint = (
