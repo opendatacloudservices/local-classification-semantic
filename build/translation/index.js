@@ -9,16 +9,20 @@ const google_1 = require("./google");
 let dictionary = { de: {}, en: {} };
 let dictionaryLoaded = false;
 const dictionaryLocation = './assets/dictionary.json';
-const get = (str, lang) => {
-    const archiveVersion = exports.getArchive(str, lang);
+const get = (str, sourceLang, targetLang) => {
+    const archiveVersion = exports.getArchive(str, targetLang);
     if (archiveVersion) {
         return Promise.resolve(archiveVersion);
     }
     else {
-        return google_1.translate(str, lang).then(translation => {
-            dictionary[lang][str] = translation;
+        return google_1.translate(str, sourceLang, targetLang)
+            .then(translation => {
+            dictionary[targetLang][str] = translation;
             saveDictionary();
             return translation;
+        })
+            .catch(err => {
+            throw err;
         });
     }
 };

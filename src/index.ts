@@ -6,7 +6,7 @@ import {
   getTaxonomies,
   processFingerprint,
   processLevenshtein,
-  processNgrams,
+  // processNgrams,
   translateGroups,
   transformTaxonomies,
   removeStopwords,
@@ -20,7 +20,7 @@ import {api, catchAll} from 'local-microservice';
 
 import {logError} from 'local-logger';
 import {extractGeonames, loadGeonames} from './taxonomies/geonames';
-import {readFileSync, writeFileSync} from 'fs';
+import {writeFileSync, readFileSync} from 'fs';
 
 // connect to postgres (via env vars params)
 const client = new Client({
@@ -50,6 +50,7 @@ client.connect().catch(err => {
  *         description: success
  */
 api.get('/classify/taxonomies', async (req, res) => {
+  res.status(200).json({message: 'Classifying'});
   Promise.all([loadGeonames(), getTaxonomies(client)])
     .then(async data => {
       const start = new Date().getTime();
@@ -61,8 +62,20 @@ api.get('/classify/taxonomies', async (req, res) => {
       taxonomies = cleanTaxonomies(taxonomies);
       console.log('After cleaning: ', taxonomies.length);
 
+      writeFileSync(
+        './tmp/01-cleaning.json',
+        JSON.stringify(taxonomies, null, 4),
+        'utf8'
+      );
+
       taxonomies = removeStopwords(taxonomies);
       console.log('After stopwords: ', taxonomies.length);
+
+      writeFileSync(
+        './tmp/02-stopwords.json',
+        JSON.stringify(taxonomies, null, 4),
+        'utf8'
+      );
 
       const dateResult = extractDates(taxonomies);
       console.log(
@@ -71,6 +84,12 @@ api.get('/classify/taxonomies', async (req, res) => {
         Object.keys(dateResult.dates).length,
         'time: ',
         new Date().getTime() - start
+      );
+
+      writeFileSync(
+        './tmp/03-dates.json',
+        JSON.stringify(dateResult.taxonomies, null, 4),
+        'utf8'
       );
 
       const geoResult = extractGeonames(dateResult.taxonomies, geonames);
@@ -82,8 +101,20 @@ api.get('/classify/taxonomies', async (req, res) => {
         new Date().getTime() - start
       );
 
+      writeFileSync(
+        './tmp/04-geo.json',
+        JSON.stringify(geoResult.taxonomies, null, 4),
+        'utf8'
+      );
+
       taxonomies = cleanTaxonomies(geoResult.taxonomies);
       console.log('Additional cleaning: ', taxonomies.length);
+
+      writeFileSync(
+        './tmp/05-cleaning.json',
+        JSON.stringify(taxonomies, null, 4),
+        'utf8'
+      );
 
       let taxonomyGroups = transformTaxonomies(taxonomies);
       console.log(
@@ -91,6 +122,12 @@ api.get('/classify/taxonomies', async (req, res) => {
         taxonomyGroups.length,
         'time: ',
         new Date().getTime() - start
+      );
+
+      writeFileSync(
+        './tmp/06-groups.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
       );
 
       taxonomyGroups = processFingerprint(taxonomyGroups);
@@ -101,12 +138,24 @@ api.get('/classify/taxonomies', async (req, res) => {
         new Date().getTime() - start
       );
 
+      writeFileSync(
+        './tmp/07-fingerprint.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
+      );
+
       taxonomyGroups = processLevenshtein(taxonomyGroups);
       console.log(
         'After levenshtein: ',
         taxonomyGroups.length,
         'time: ',
         new Date().getTime() - start
+      );
+
+      writeFileSync(
+        './tmp/08-levenshtein.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
       );
 
       // ----------------------------------------------
@@ -146,6 +195,12 @@ api.get('/classify/taxonomies', async (req, res) => {
         new Date().getTime() - start
       );
 
+      writeFileSync(
+        './tmp/09-minor.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
+      );
+
       taxonomyGroups = await translateGroups(taxonomyGroups);
 
       console.log(
@@ -156,13 +211,12 @@ api.get('/classify/taxonomies', async (req, res) => {
       );
 
       writeFileSync(
-        './tmp/sofar-trans.json',
+        './tmp/10-translate.json',
         JSON.stringify(taxonomyGroups, null, 4),
         'utf8'
       );
 
       console.log('done');
-      res.status(200).json({message: 'Classifying'});
     })
     .catch(err => {
       console.log(err);
@@ -170,16 +224,3 @@ api.get('/classify/taxonomies', async (req, res) => {
 });
 
 catchAll();
-
-const taxonomyGroups = JSON.parse(readFileSync('./tmp/sofar.json', 'utf8'));
-
-console.log('After minor classes: ', taxonomyGroups.length);
-translateGroups(taxonomyGroups).then(taxonomyGroups => {
-  console.log('After translate: ', taxonomyGroups.length);
-
-  writeFileSync(
-    './tmp/sofar-trans.json',
-    JSON.stringify(taxonomyGroups, null, 4),
-    'utf8'
-  );
-});

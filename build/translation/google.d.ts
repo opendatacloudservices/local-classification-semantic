@@ -1,1 +1,1 @@
-export declare const translate: (text: string, lang: string) => Promise<string | null>;
+export declare const translate: (text: string, sourceLang: string, targetLang: string) => Promise<string | null>;

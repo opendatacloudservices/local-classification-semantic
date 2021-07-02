@@ -27,6 +27,13 @@ const getTaxonomies = (client) => {
 };
 exports.getTaxonomies = getTaxonomies;
 const cleanTaxonomies = (taxonomies) => {
+    // make sure its all lower case
+    taxonomies = taxonomies.map(t => {
+        return {
+            ...t,
+            value: t.value.toLowerCase(),
+        };
+    });
     // remove all taxonomies without value
     taxonomies = taxonomies.filter(t => t.value &&
         t.value.length > 3 &&
@@ -42,17 +49,38 @@ const cleanTaxonomies = (taxonomies) => {
     for (let t = 0; t < taxonomies.length; t += 1) {
         taxonomies[t].value = taxonomies[t].value.replace(/["'„“»«‚‘›‹]/g, '');
     }
+    const deleteWords = ['http', 'inspire'];
+    taxonomies = taxonomies.filter(t => {
+        let notFound = true;
+        deleteWords.forEach(w => {
+            if (t.value.indexOf(w) >= 0) {
+                notFound = false;
+            }
+        });
+        return notFound;
+    });
     return taxonomies;
 };
 exports.cleanTaxonomies = cleanTaxonomies;
 const removeStopwords = (taxonomies) => {
+    const customStopwords = [
+        'eu',
+        'sonstige',
+        'übrige',
+        'op',
+        'eg',
+        'insgesamt',
+        'gesamt',
+        'bn',
+    ];
+    const allStopwords = stopwords.concat(customStopwords);
     const taxonomyDeletion = [];
     for (let t = 0; t < taxonomies.length; t += 1) {
-        let els = taxonomies[t].value.split(/[\s,-.–;]/g);
+        let els = taxonomies[t].value.split(/[\s,-.–;/_]/g);
         const deletion = [];
         els.forEach((el, ei) => {
             el = el.replace(/[)[\]]/g, '');
-            if (stopwords.includes(el)) {
+            if (allStopwords.includes(el)) {
                 deletion.push(ei);
             }
         });
@@ -60,7 +88,8 @@ const removeStopwords = (taxonomies) => {
         for (let d = deletion.length - 1; d >= 0; d -= 1) {
             delete els[deletion[d]];
         }
-        els = els.filter(e => (e && e.trim().length > 0 ? true : false));
+        // min length of words > 2
+        els = els.filter(e => (e && e.trim().length > 2 ? true : false));
         // we replace all delimiters with simple spaces!
         taxonomies[t].value = els.join(' ').trim();
         if (taxonomies[t].value.length === 0) {
@@ -118,9 +147,7 @@ const transformTaxonomies = (taxonomies) => {
 exports.transformTaxonomies = transformTaxonomies;
 /*
  * TODO:
- * - after all mergings, add minor tag to taxonomies with only N elements (probably 5)
  * - sample on 1800-2020, otherwise also remove
- * -," " and check overlaps remove stopwords
  */
 const processFingerprint = (taxonomyGroups) => {
     const analysis = fingerprint_1.analyse(taxonomyGroups.map(t => t.label), 'normal', {
@@ -187,7 +214,7 @@ exports.processLevenshtein = processLevenshtein;
 const translateGroups = async (taxonomyGroups) => {
     const deletion = [];
     for (let ti = 0; ti < taxonomyGroups.length; ti += 1) {
-        const translation = await index_1.get(taxonomyGroups[ti].label, 'en');
+        const translation = await index_1.get(taxonomyGroups[ti].label, 'de', 'en');
         if (!translation) {
             deletion.push(ti);
         }
@@ -196,7 +223,7 @@ const translateGroups = async (taxonomyGroups) => {
             if (translation &&
                 taxonomyGroups[ti].label.toLowerCase().trim() ===
                     translation.toLowerCase().trim()) {
-                const reTranslation = await index_1.get(taxonomyGroups[ti].label, 'de');
+                const reTranslation = await index_1.get(taxonomyGroups[ti].label, 'en', 'de');
                 if (!reTranslation) {
                     deletion.push(ti);
                 }

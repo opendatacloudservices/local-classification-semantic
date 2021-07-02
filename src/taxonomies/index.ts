@@ -34,7 +34,7 @@ export const cleanTaxonomies = (taxonomies: Taxonomy[]): Taxonomy[] => {
     return {
       ...t,
       value: t.value.toLowerCase(),
-    }
+    };
   });
 
   // remove all taxonomies without value
@@ -59,10 +59,7 @@ export const cleanTaxonomies = (taxonomies: Taxonomy[]): Taxonomy[] => {
     taxonomies[t].value = taxonomies[t].value.replace(/["'„“»«‚‘›‹]/g, '');
   }
 
-  const deleteWords = [
-    'http',
-    'inspire'
-  ];
+  const deleteWords = ['http', 'inspire'];
 
   taxonomies = taxonomies.filter(t => {
     let notFound = true;
@@ -81,16 +78,19 @@ export const removeStopwords = (taxonomies: Taxonomy[]): Taxonomy[] => {
   const customStopwords = [
     'eu',
     'sonstige',
+    'übrige',
     'op',
     'eg',
     'insgesamt',
     'gesamt',
     'bn',
+    'service',
+    'eur',
   ];
   const allStopwords = stopwords.concat(customStopwords);
   const taxonomyDeletion: number[] = [];
   for (let t = 0; t < taxonomies.length; t += 1) {
-    let els = taxonomies[t].value.split(/[\s,-.–;]/g);
+    let els = taxonomies[t].value.split(/[\s,-.–;/_]/g);
     const deletion: number[] = [];
     els.forEach((el, ei) => {
       el = el.replace(/[)[\]]/g, '');
@@ -102,7 +102,8 @@ export const removeStopwords = (taxonomies: Taxonomy[]): Taxonomy[] => {
     for (let d = deletion.length - 1; d >= 0; d -= 1) {
       delete els[deletion[d]];
     }
-    els = els.filter(e => (e && e.trim().length > 0 ? true : false));
+    // min length of words > 2
+    els = els.filter(e => (e && e.trim().length > 2 ? true : false));
     // we replace all delimiters with simple spaces!
     taxonomies[t].value = els.join(' ').trim();
     if (taxonomies[t].value.length === 0) {
@@ -272,7 +273,7 @@ export const translateGroups = async (
 ): Promise<TaxonomyGroup[]> => {
   const deletion: number[] = [];
   for (let ti = 0; ti < taxonomyGroups.length; ti += 1) {
-    const translation = await translate(taxonomyGroups[ti].label, 'en');
+    const translation = await translate(taxonomyGroups[ti].label, 'de', 'en');
     if (!translation) {
       deletion.push(ti);
     } else {
@@ -282,7 +283,11 @@ export const translateGroups = async (
         taxonomyGroups[ti].label.toLowerCase().trim() ===
           translation.toLowerCase().trim()
       ) {
-        const reTranslation = await translate(taxonomyGroups[ti].label, 'de');
+        const reTranslation = await translate(
+          taxonomyGroups[ti].label,
+          'en',
+          'de'
+        );
         if (!reTranslation) {
           deletion.push(ti);
         } else if (

@@ -20,16 +20,24 @@ let dictionaryLoaded = false;
 
 const dictionaryLocation = './assets/dictionary.json';
 
-export const get = (str: string, lang: languages): Promise<string | null> => {
-  const archiveVersion = getArchive(str, lang);
+export const get = (
+  str: string,
+  sourceLang: languages,
+  targetLang: languages
+): Promise<string | null> => {
+  const archiveVersion = getArchive(str, targetLang);
   if (archiveVersion) {
     return Promise.resolve(archiveVersion);
   } else {
-    return googleTranslate(str, lang).then(translation => {
-      dictionary[lang][str] = translation;
-      saveDictionary();
-      return translation;
-    });
+    return googleTranslate(str, sourceLang, targetLang)
+      .then(translation => {
+        dictionary[targetLang][str] = translation;
+        saveDictionary();
+        return translation;
+      })
+      .catch(err => {
+        throw err;
+      });
   }
 };
 

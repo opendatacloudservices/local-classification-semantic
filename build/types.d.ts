@@ -40,7 +40,8 @@ export interface clusterResult {
     key: string;
 }
 export interface GeoName {
-    lat: number;
-    lon: number;
+    lat: number | null;
+    lon: number | null;
+    bbox: number[] | null;
     values: string[];
 }
