@@ -72,6 +72,8 @@ const removeStopwords = (taxonomies) => {
         'insgesamt',
         'gesamt',
         'bn',
+        'service',
+        'eur',
     ];
     const allStopwords = stopwords.concat(customStopwords);
     const taxonomyDeletion = [];
@@ -150,7 +152,7 @@ exports.transformTaxonomies = transformTaxonomies;
  * - sample on 1800-2020, otherwise also remove
  */
 const processFingerprint = (taxonomyGroups) => {
-    const analysis = fingerprint_1.analyse(taxonomyGroups.map(t => t.label), 'normal', {
+    const analysis = (0, fingerprint_1.analyse)(taxonomyGroups.map(t => t.label), 'normal', {
         lang: 'german',
         stemming: true,
     });
@@ -183,7 +185,7 @@ const processFingerprint = (taxonomyGroups) => {
 };
 exports.processFingerprint = processFingerprint;
 const processNgrams = (taxonomies) => {
-    const groups = ngrams_1.prepare(taxonomies.map(t => t.label), 12 // if two tags share at least 10 sequential characters they are part of a group ???!
+    const groups = (0, ngrams_1.prepare)(taxonomies.map(t => t.label), 12 // if two tags share at least 10 sequential characters they are part of a group ???!
     );
     const deletion = [];
     Object.keys(groups).forEach((group, gi) => {
@@ -208,13 +210,13 @@ const processNgrams = (taxonomies) => {
 };
 exports.processNgrams = processNgrams;
 const processLevenshtein = (taxonomyGroups) => {
-    return levenshtein_1.levenshtein(taxonomyGroups);
+    return (0, levenshtein_1.levenshtein)(taxonomyGroups);
 };
 exports.processLevenshtein = processLevenshtein;
 const translateGroups = async (taxonomyGroups) => {
     const deletion = [];
     for (let ti = 0; ti < taxonomyGroups.length; ti += 1) {
-        const translation = await index_1.get(taxonomyGroups[ti].label, 'de', 'en');
+        const translation = await (0, index_1.get)(taxonomyGroups[ti].label, 'de', 'en');
         if (!translation) {
             deletion.push(ti);
         }
@@ -223,7 +225,7 @@ const translateGroups = async (taxonomyGroups) => {
             if (translation &&
                 taxonomyGroups[ti].label.toLowerCase().trim() ===
                     translation.toLowerCase().trim()) {
-                const reTranslation = await index_1.get(taxonomyGroups[ti].label, 'en', 'de');
+                const reTranslation = await (0, index_1.get)(taxonomyGroups[ti].label, 'en', 'de');
                 if (!reTranslation) {
                     deletion.push(ti);
                 }

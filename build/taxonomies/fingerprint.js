@@ -27,7 +27,7 @@ const key = (str, type = 'normal', params = {
         }
         str = str.replace(punct, '');
         if (type === 'normal') {
-            str = exports.asciify(str);
+            str = (0, exports.asciify)(str);
         }
         str = str.replace(printable, '');
         const frags = str.split(whitespace);
@@ -212,7 +212,7 @@ const analyse = (data, type = 'normal', params = {
 }) => {
     const map = {};
     data.forEach((d, di) => {
-        const keyed = exports.key(d, type, params);
+        const keyed = (0, exports.key)(d, type, params);
         if (!(keyed in map)) {
             map[keyed] = [];
         }

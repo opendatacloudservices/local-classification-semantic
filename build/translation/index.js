@@ -10,14 +10,16 @@ let dictionary = { de: {}, en: {} };
 let dictionaryLoaded = false;
 const dictionaryLocation = './assets/dictionary.json';
 const get = (str, sourceLang, targetLang) => {
-    const archiveVersion = exports.getArchive(str, targetLang);
+    const archiveVersion = (0, exports.getArchive)(str, targetLang);
     if (archiveVersion) {
         return Promise.resolve(archiveVersion);
     }
     else {
-        return google_1.translate(str, sourceLang, targetLang)
+        return (0, google_1.translate)(str, sourceLang, targetLang)
             .then(translation => {
-            dictionary[targetLang][str] = translation;
+            dictionary[targetLang][str] = translation
+                ? translation.toLowerCase()
+                : '';
             saveDictionary();
             return translation;
         })
@@ -32,19 +34,19 @@ const getArchive = (str, lang) => {
         loadDictionary();
     }
     if (str in dictionary[lang]) {
-        return dictionary[lang][str];
+        return dictionary[lang][str].toLowerCase();
     }
     return null;
 };
 exports.getArchive = getArchive;
 const loadDictionary = () => {
-    if (!fs_1.existsSync(dictionaryLocation)) {
+    if (!(0, fs_1.existsSync)(dictionaryLocation)) {
         saveDictionary();
     }
-    dictionary = JSON.parse(fs_1.readFileSync(dictionaryLocation, 'utf8'));
+    dictionary = JSON.parse((0, fs_1.readFileSync)(dictionaryLocation, 'utf8'));
     dictionaryLoaded = true;
 };
 const saveDictionary = () => {
-    fs_1.writeFileSync(dictionaryLocation, JSON.stringify(dictionary), 'utf8');
+    (0, fs_1.writeFileSync)(dictionaryLocation, JSON.stringify(dictionary), 'utf8');
 };
 //# sourceMappingURL=index.js.map

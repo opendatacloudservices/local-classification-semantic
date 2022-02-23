@@ -9,10 +9,10 @@ export type languages = 'de' | 'en';
 
 let dictionary: {
   de: {
-    [key: string]: string | null;
+    [key: string]: string;
   };
   en: {
-    [key: string]: string | null;
+    [key: string]: string;
   };
 } = {de: {}, en: {}};
 
@@ -31,7 +31,9 @@ export const get = (
   } else {
     return googleTranslate(str, sourceLang, targetLang)
       .then(translation => {
-        dictionary[targetLang][str] = translation;
+        dictionary[targetLang][str] = translation
+          ? translation.toLowerCase()
+          : '';
         saveDictionary();
         return translation;
       })
@@ -46,7 +48,7 @@ export const getArchive = (str: string, lang: languages): string | null => {
     loadDictionary();
   }
   if (str in dictionary[lang]) {
-    return dictionary[lang][str];
+    return dictionary[lang][str].toLowerCase();
   }
   return null;
 };

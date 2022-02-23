@@ -16,11 +16,11 @@ import {extractDates} from './taxonomies/dates';
 // get environmental variables
 dotenv.config({path: path.join(__dirname, '../.env')});
 
-import {api, catchAll} from 'local-microservice';
+import {api, catchAll} from '@opendatacloudservices/local-microservice';
 
-import {logError} from 'local-logger';
+import {logError} from '@opendatacloudservices/local-logger';
 import {extractGeonames, loadGeonames} from './taxonomies/geonames';
-import {writeFileSync, readFileSync} from 'fs';
+import {writeFileSync} from 'fs';
 
 // connect to postgres (via env vars params)
 const client = new Client({
@@ -212,6 +212,22 @@ api.get('/classify/taxonomies', async (req, res) => {
 
       writeFileSync(
         './tmp/10-translate.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
+      );
+
+      taxonomyGroups = processFingerprint(taxonomyGroups);
+
+      writeFileSync(
+        './tmp/11-2ndFingerprint.json',
+        JSON.stringify(taxonomyGroups, null, 4),
+        'utf8'
+      );
+
+      taxonomyGroups = processLevenshtein(taxonomyGroups);
+
+      writeFileSync(
+        './tmp/12-2ndLevenshtein.json',
         JSON.stringify(taxonomyGroups, null, 4),
         'utf8'
       );

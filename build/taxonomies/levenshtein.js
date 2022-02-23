@@ -4,14 +4,14 @@ exports.levenshtein = exports.levenshteinPercentage = void 0;
 const fastest_levenshtein_1 = require("fastest-levenshtein");
 const ngrams_1 = require("./ngrams");
 const levenshteinPercentage = (word1, word2) => {
-    let index = fastest_levenshtein_1.distance(word1, word2);
+    let index = (0, fastest_levenshtein_1.distance)(word1, word2);
     index /= word1.length < word2.length ? word1.length : word2.length;
     return index;
 };
 exports.levenshteinPercentage = levenshteinPercentage;
 const levenshtein = (taxonomies) => {
     // identify groups of words that share certain ngrams
-    const groups = ngrams_1.prepare(taxonomies.map(t => t.label));
+    const groups = (0, ngrams_1.prepare)(taxonomies.map(t => t.label));
     const deletion = [];
     // create distance matrices for all words in each group
     Object.keys(groups).forEach(key => {
@@ -26,7 +26,7 @@ const levenshtein = (taxonomies) => {
                     if (mapped[id1] !== id2 &&
                         id1 !== id2 &&
                         mapped[id2] !== mapped[id1]) {
-                        const dist = exports.levenshteinPercentage(taxonomies[id1].label, taxonomies[id2].label);
+                        const dist = (0, exports.levenshteinPercentage)(taxonomies[id1].label, taxonomies[id2].label);
                         if (dist < 0.2) {
                             if (mapped[id2] !== id2) {
                                 for (let c = 0; c < taxonomies[mapped[id2]].children.length; c += 1) {

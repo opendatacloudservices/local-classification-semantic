@@ -76,8 +76,8 @@ const exclude = [
 ];
 const loadGeonames = () => {
     return new Promise(resolve => {
-        const data = fs_1.readFileSync('./assets/geonames_DE.txt', 'utf8');
-        const officialData = fs_1.readFileSync('./assets/locations-clean.tsv', 'utf8');
+        const data = (0, fs_1.readFileSync)('./assets/geonames_DE.txt', 'utf8');
+        const officialData = (0, fs_1.readFileSync)('./assets/locations-clean.tsv', 'utf8');
         const uniqueGeonames = [];
         const geoNames = [];
         data.split('\n').forEach(line => {
@@ -230,7 +230,7 @@ const extractGeonames = (taxonomies, geoNames) => {
     sortableMatches.sort((a, b) => {
         return a[1] - b[1];
     });
-    fs_1.writeFileSync('./tmp/geonames', JSON.stringify(sortableMatches, null, 4), 'utf8');
+    (0, fs_1.writeFileSync)('./tmp/geonames', JSON.stringify(sortableMatches, null, 4), 'utf8');
     return r;
 };
 exports.extractGeonames = extractGeonames;

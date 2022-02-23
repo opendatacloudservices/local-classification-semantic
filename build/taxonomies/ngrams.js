@@ -68,11 +68,11 @@ const prepare = (data, ngramSize = 6) => {
             cleanCount += 1;
             if (cleanCount > 500) {
                 cleanCount = 0;
-                clusters = exports.cleanNgrams(clusters);
+                clusters = (0, exports.cleanNgrams)(clusters);
             }
         }
     });
-    clusters = exports.cleanNgrams(clusters);
+    clusters = (0, exports.cleanNgrams)(clusters);
     clusters['cluster-' + clusterCount] = shortWords;
     return clusters;
 };
